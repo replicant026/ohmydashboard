@@ -1,6 +1,6 @@
 # OhMyDashboard — Tasks
 
-> Generated from BRIEF.md. Phase 1 MVP implementation complete.
+> Generated from BRIEF.md. Phase 1 & Phase 2 implementation complete.
 
 ---
 
@@ -56,42 +56,62 @@
 - [x] 9.1 Frontend connected to backend via Vite proxy (`/api` → localhost:3456)
 - [x] 9.2 Verified with browser automation — all panels render correctly
 - [x] 9.3 Build passes (`vite build` — no TS errors)
-- [ ] 9.4 Connect to real OpenCode CLI data (requires CLI adapter — Phase 2)
+- [ ] 9.4 Connect to real OpenCode CLI data (requires CLI adapter — Phase 3)
 
 ---
 
-## Phase 2: Analytics & Real Data (Next)
+## Phase 2: Analytics & Polish ✅
 
-### 10. Real Data Integration
-- [ ] 10.1 Build OpenCode CLI adapter (`server/opencode-adapter.ts`)
-- [ ] 10.2 Wrap `opencode session list --json` and `opencode session info --json`
-- [ ] 10.3 Add in-memory cache with TTL for CLI results
-- [ ] 10.4 Replace mock data with real CLI output
+### 10. Extended Types & API ✅
+- [x] 10.1 Added Phase 2 types: `CostHistoryEntry`, `ModelUsage`, `HourlyActivity`, `SessionMessage`, `DateRange`
+- [x] 10.2 New API endpoints: `GET /api/cost-history`, `GET /api/models`, `GET /api/activity`, `GET /api/sessions/:id/messages`
+- [x] 10.3 Date range filtering (`?range=today|week|month|all`) on stats, sessions, usage endpoints
+- [x] 10.4 Mock data: 14-day cost history, 6 AI models, 7×24 hourly activity grid, session messages
 
-### 11. Cost Tracking Chart
-- [ ] 11.1 Daily/weekly cost breakdown line chart
-- [ ] 11.2 Cost per agent stacked bar chart
+### 11. Cost Tracking Chart ✅
+- [x] 11.1 Recharts AreaChart with green gradient fill
+- [x] 11.2 Custom tooltip showing cost, sessions, messages per day
+- [x] 11.3 14-day total displayed in header
 
-### 12. Model Distribution
-- [ ] 12.1 Donut chart showing model usage (claude, gpt, gemini)
-- [ ] 12.2 Cost contribution per model
+### 12. Model Distribution ✅
+- [x] 12.1 Recharts PieChart donut (inner 40, outer 70) with colored cells
+- [x] 12.2 Legend with model names, colored dots, and percentages
+- [x] 12.3 Header shows total messages and cost
 
-### 13. Activity Heatmap
-- [ ] 13.1 GitHub-style contribution grid (7 days × 24 hours)
-- [ ] 13.2 Color intensity based on message volume
+### 13. Activity Heatmap ✅
+- [x] 13.1 Pure CSS 7×24 grid (Sun–Sat × 0–23h)
+- [x] 13.2 Emerald intensity scale (4 levels + empty)
+- [x] 13.3 GitHub-style with Less/More legend
+- [x] 13.4 Hover tooltips showing day, time, message count
 
-### 14. Session Detail View
-- [ ] 14.1 Click session to expand and see messages
-- [ ] 14.2 Message timeline with role/content/timestamp
+### 14. Session Detail View ✅
+- [x] 14.1 Click-to-expand sessions with chevron toggle
+- [x] 14.2 Fetches `/api/sessions/:id/messages` on expand
+- [x] 14.3 Message timeline with user/bot icons, agent name, model, cost, timestamp
+- [x] 14.4 Scrollable message container (max-height 320px)
 
-### 15. Date Range Filtering
-- [ ] 15.1 Date picker for filtering sessions
-- [ ] 15.2 Today/Week/Month preset buttons
+### 15. Date Range Filtering ✅
+- [x] 15.1 Segmented button group in header (Today/Week/Month/All)
+- [x] 15.2 Filters stats, sessions, and agent usage by date range
+- [x] 15.3 Updated `useDashboardData` hook to pass range to all relevant endpoints
+
+### 16. Integration & Testing ✅
+- [x] 16.1 Updated `useDashboardData` hook: fetches 7 endpoints (stats, agents, sessions, usage, costHistory, models, activity)
+- [x] 16.2 Build passes (`vite build` — 2353 modules, no TS errors)
+- [x] 16.3 Verified with browser automation — all Phase 2 panels render correctly
+- [x] 16.4 Version bumped to v0.2.0
 
 ---
 
 ## Phase 3: Advanced (Future)
 
+### Real Data Integration
+- [ ] Build OpenCode CLI adapter (`server/opencode-adapter.ts`)
+- [ ] Wrap `opencode session list --json` and `opencode session info --json`
+- [ ] Add in-memory cache with TTL for CLI results
+- [ ] Replace mock data with real CLI output
+
+### Advanced Features
 - [ ] SSE real-time updates (if OpenCode supports it)
 - [ ] Cost alerts / budget warnings
 - [ ] Agent performance metrics (time to complete)
@@ -112,17 +132,20 @@ ohmydashboard/
 ├── src/
 │   ├── main.tsx                    # Entry point
 │   ├── index.css                   # Tailwind v4 import + dark theme
-│   ├── App.tsx                     # Main dashboard layout
-│   ├── types/opencode.ts           # TypeScript interfaces
+│   ├── App.tsx                     # Main dashboard layout (v0.2.0)
+│   ├── types/opencode.ts           # TypeScript interfaces (Phase 1 + 2)
 │   ├── lib/utils.ts                # formatCost, formatTimeAgo, cn()
-│   ├── hooks/useDashboardData.ts   # Auto-refresh data fetcher
+│   ├── hooks/useDashboardData.ts   # Auto-refresh data fetcher (7 endpoints)
 │   └── components/dashboard/
 │       ├── SummaryCards.tsx         # 4 stat cards
 │       ├── ActiveAgents.tsx        # Agent activity table
-│       ├── SessionTimeline.tsx     # Recent sessions list
-│       └── AgentLeaderboard.tsx    # Agent usage bar chart
+│       ├── SessionTimeline.tsx     # Expandable sessions + message view
+│       ├── AgentLeaderboard.tsx    # Agent usage bar chart (CSS)
+│       ├── CostChart.tsx           # 14-day cost area chart (Recharts)
+│       ├── ModelDistribution.tsx   # Model usage donut chart (Recharts)
+│       └── ActivityHeatmap.tsx     # 7×24 activity grid (CSS)
 └── server/
-    └── index.ts                    # Hono API server (port 3456)
+    └── index.ts                    # Hono API server (8 endpoints, port 3456)
 ```
 
 ## Commands

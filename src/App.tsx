@@ -1,12 +1,29 @@
-import { RefreshCw } from 'lucide-react'
+import { RefreshCw, Calendar } from 'lucide-react'
 import { useDashboardData } from '@/hooks/useDashboardData'
 import { SummaryCards } from '@/components/dashboard/SummaryCards'
 import { ActiveAgents } from '@/components/dashboard/ActiveAgents'
 import { SessionTimeline } from '@/components/dashboard/SessionTimeline'
 import { AgentLeaderboard } from '@/components/dashboard/AgentLeaderboard'
+import { CostChart } from '@/components/dashboard/CostChart'
+import { ModelDistribution } from '@/components/dashboard/ModelDistribution'
+import { ActivityHeatmap } from '@/components/dashboard/ActivityHeatmap'
+import type { DateRange } from '@/types/opencode'
+import { cn } from '@/lib/utils'
+
+const DATE_RANGES: { label: string; value: DateRange }[] = [
+  { label: 'Today', value: 'today' },
+  { label: 'Week', value: 'week' },
+  { label: 'Month', value: 'month' },
+  { label: 'All', value: 'all' },
+]
 
 function App() {
-  const { stats, agents, sessions, usage, loading, error, lastUpdated, refresh, secondsUntilRefresh } = useDashboardData()
+  const {
+    stats, agents, sessions, usage,
+    costHistory, models, activity,
+    loading, error, lastUpdated, refresh, secondsUntilRefresh,
+    dateRange, setDateRange,
+  } = useDashboardData()
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
@@ -18,10 +35,29 @@ function App() {
               ⚡
             </div>
             <h1 className="text-lg font-semibold text-zinc-100">OhMyDashboard</h1>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-500 font-mono">v0.1.0</span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-500 font-mono">v0.2.0</span>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            {/* Date Range Filter */}
+            <div className="flex items-center gap-1 bg-zinc-800/50 rounded-lg p-0.5 border border-zinc-700/50">
+              <Calendar className="w-3.5 h-3.5 text-zinc-500 ml-2" />
+              {DATE_RANGES.map(({ label, value }) => (
+                <button
+                  key={value}
+                  onClick={() => setDateRange(value)}
+                  className={cn(
+                    'px-2.5 py-1 text-xs font-medium rounded-md transition-colors',
+                    dateRange === value
+                      ? 'bg-zinc-700 text-zinc-100'
+                      : 'text-zinc-500 hover:text-zinc-300'
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
             {error && (
               <span className="text-xs text-red-400 bg-red-400/10 px-2 py-1 rounded">
                 {error}
@@ -29,7 +65,7 @@ function App() {
             )}
             {lastUpdated && (
               <span className="text-xs text-zinc-600 font-mono">
-                refresh in {secondsUntilRefresh}s
+                {secondsUntilRefresh}s
               </span>
             )}
             <button
@@ -46,10 +82,10 @@ function App() {
 
       {/* Dashboard Content */}
       <main className="max-w-7xl mx-auto px-6 py-6 space-y-6">
-        {/* Summary Cards */}
+        {/* Row 1: Summary Cards */}
         <SummaryCards stats={stats} loading={loading} />
 
-        {/* Active Agents + Leaderboard */}
+        {/* Row 2: Active Agents + Agent Leaderboard */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           <div className="lg:col-span-3">
             <ActiveAgents agents={agents} loading={loading} />
@@ -59,7 +95,20 @@ function App() {
           </div>
         </div>
 
-        {/* Session Timeline */}
+        {/* Row 3: Cost Chart + Model Distribution */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          <div className="lg:col-span-3">
+            <CostChart data={costHistory} loading={loading} />
+          </div>
+          <div className="lg:col-span-2">
+            <ModelDistribution data={models} loading={loading} />
+          </div>
+        </div>
+
+        {/* Row 4: Activity Heatmap */}
+        <ActivityHeatmap data={activity} loading={loading} />
+
+        {/* Row 5: Session Timeline */}
         <SessionTimeline sessions={sessions} loading={loading} />
       </main>
 
