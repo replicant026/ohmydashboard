@@ -1,6 +1,6 @@
 # OhMyDashboard — Tasks
 
-> Generated from BRIEF.md. All 5 phases complete.
+> Generated from BRIEF.md. All 6 phases complete.
 
 ---
 
@@ -197,6 +197,20 @@
 
 ---
 
+## Phase 6: Total Tokens Metric ✅
+
+### 31. Token Tracking ✅
+- [x] 31.1 Added `totalTokens` field to `DashboardStats` type (both server and client)
+- [x] 31.2 Updated `getStats()` in opencode-reader to sum input+output+reasoning tokens from all messages
+- [x] 31.3 Tokens computed per date range filter (today/week/month/all)
+- [x] 31.4 Added 5th summary card "Total Tokens" with Coins icon (cyan accent)
+- [x] 31.5 `formatTokens()` helper for human-readable display (K/M/B)
+- [x] 31.6 Grid updated from 4 to 5 columns (`lg:grid-cols-5`)
+- [x] 31.7 Verified: 275.9M tokens across all sessions (real data)
+- [x] 31.8 Build passes (2356 modules, no errors)
+
+---
+
 ## Architecture
 
 ```
@@ -215,7 +229,7 @@ ohmydashboard/
 │   ├── hooks/useDashboardData.ts   # Auto-refresh data fetcher (7 endpoints)
 │   ├── components/Logo.tsx          # Custom SVG logo component (NEW)
 │   └── components/dashboard/
-│       ├── SummaryCards.tsx         # 4 stat cards
+│       ├── SummaryCards.tsx         # 5 stat cards (sessions, messages, tokens, cost, active)
 │       ├── ActiveAgents.tsx        # Agent activity table
 │       ├── SessionTable.tsx        # TanStack Table with pagination + filters (NEW)
 │       ├── SessionTimeline.tsx     # Legacy expandable sessions (replaced)

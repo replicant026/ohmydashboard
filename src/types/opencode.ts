@@ -26,6 +26,7 @@ export interface DashboardStats {
   totalSessions: number
   totalMessages: number
   totalCost: number
+  totalTokens: number
   activeAgents: number
 }
 

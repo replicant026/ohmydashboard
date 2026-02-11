@@ -85,6 +85,7 @@ export interface DashboardStats {
   totalSessions: number
   totalMessages: number
   totalCost: number
+  totalTokens: number
   activeAgents: number
 }
 
@@ -290,9 +291,20 @@ export class OpenCodeReader {
   }
 
   async getStats(range: DateRange = 'all'): Promise<DashboardStats> {
-    const sessions = await this.getSessions(range)
+    const [sessions, allMessages] = await Promise.all([
+      this.getSessions(range),
+      this.getAllMessages(),
+    ])
     const totalMessages = sessions.reduce((sum, s) => sum + s.messageCount, 0)
     const totalCost = sessions.reduce((sum, s) => sum + s.cost, 0)
+
+    // Sum tokens from all messages within range
+    const cutoff = getCutoff(range)
+    const rangeMessages = allMessages.filter(m => m.time.created >= cutoff)
+    const totalTokens = rangeMessages.reduce((sum, m) => {
+      if (!m.tokens) return sum
+      return sum + m.tokens.input + m.tokens.output + m.tokens.reasoning
+    }, 0)
 
     // "Active" = sessions updated within the last 5 minutes
     const fiveMinAgo = Date.now() - 5 * 60 * 1000
@@ -302,6 +314,7 @@ export class OpenCodeReader {
       totalSessions: sessions.length,
       totalMessages,
       totalCost,
+      totalTokens,
       activeAgents,
     }
   }
