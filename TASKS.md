@@ -1,6 +1,6 @@
 # OhMyDashboard — Tasks
 
-> Generated from BRIEF.md. All 6 phases complete.
+> Generated from BRIEF.md. All 7 phases complete.
 
 ---
 
@@ -56,7 +56,7 @@
 - [x] 9.1 Frontend connected to backend via Vite proxy (`/api` → localhost:3456)
 - [x] 9.2 Verified with browser automation — all panels render correctly
 - [x] 9.3 Build passes (`vite build` — no TS errors)
-- [ ] 9.4 Connect to real OpenCode CLI data (requires CLI adapter — Phase 3)
+- [x] 9.4 Connect to real OpenCode CLI data (requires CLI adapter — Phase 3)
 
 ---
 
@@ -211,15 +211,46 @@
 
 ---
 
+## Phase 7: CLI Packaging (`bunx ohmydashboard`) ✅
+
+### 32. CLI Entry Point ✅
+- [x] 32.1 Created `bin/cli.ts` — Bun-native CLI with `#!/usr/bin/env bun` shebang
+- [x] 32.2 Unified Hono server: serves API routes (`/api/*`) + pre-built SPA (`dist/`)
+- [x] 32.3 Static file serving with content-type mapping (html, js, css, svg, png, json, ico, woff2)
+- [x] 32.4 SPA fallback: non-API, non-file routes → `index.html`
+- [x] 32.5 CLI flags: `--port` (default 51234), `--host` (default 127.0.0.1)
+- [x] 32.6 `parseArgs` for flag parsing (Node.js built-in, Bun compatible)
+
+### 33. Package Configuration ✅
+- [x] 33.1 Added `bin` field: `{"ohmydashboard": "./bin/cli.ts"}`
+- [x] 33.2 Added `files`: `["bin", "server", "dist"]` — only ship what's needed
+- [x] 33.3 Added `engines`: `{"bun": ">=1.1.0"}`
+- [x] 33.4 Added `prepublishOnly`: `npm run build` — ensures dist/ is built before publish
+- [x] 33.5 Added `build:ui` script alias for vite build
+
+### 34. Vite Config Update ✅
+- [x] 34.1 Added `base: "./"` to vite.config.ts for relative asset paths in CLI mode
+
+### 35. Verification ✅
+- [x] 35.1 `bun bin/cli.ts` starts server serving dashboard with real data
+- [x] 35.2 Build passes (`npm run build`)
+- [x] 35.3 All API endpoints work through unified server
+- [x] 35.4 Static assets (JS, CSS, SVG) served with correct content types
+
+---
+
 ## Architecture
 
 ```
 ohmydashboard/
 ├── BRIEF.md                        # Project brief
 ├── TASKS.md                        # This file
+├── GUIDE.md                        # CLI packaging guide
 ├── package.json                    # Vite + React 19 + Tailwind v4 + Hono + TanStack Table
-├── vite.config.ts                  # Tailwind plugin, @/ alias, proxy
+├── vite.config.ts                  # Tailwind plugin, @/ alias, proxy, base: "./"
 ├── tsconfig.app.json               # Strict TS, path aliases
+├── bin/
+│   └── cli.ts                      # CLI entry: bunx ohmydashboard (Bun.serve + Hono + SPA)
 ├── src/
 │   ├── main.tsx                    # Entry point
 │   ├── index.css                   # Tailwind v4 import + dark theme

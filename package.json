@@ -1,19 +1,33 @@
 {
   "name": "ohmydashboard",
-  "private": true,
-  "version": "0.0.0",
+  "version": "0.5.0",
+  "description": "Agent monitoring dashboard for OpenCode — run with bunx ohmydashboard",
   "type": "module",
+  "bin": {
+    "ohmydashboard": "./bin/cli.ts"
+  },
+  "files": [
+    "bin",
+    "server",
+    "dist"
+  ],
+  "engines": {
+    "bun": ">=1.1.0"
+  },
   "scripts": {
     "dev": "concurrently \"vite\" \"tsx watch server/index.ts\"",
     "dev:frontend": "vite",
     "dev:server": "tsx watch server/index.ts",
     "build": "tsc -b && vite build",
+    "build:ui": "vite build",
+    "prepublishOnly": "npm run build:ui",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-table": "^8.21.3",
+    "hono": "^4.11.9",
     "lucide-react": "^0.563.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
@@ -32,7 +46,6 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
-    "hono": "^4.11.9",
     "tsx": "^4.21.0",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.48.0",
