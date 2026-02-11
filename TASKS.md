@@ -1,6 +1,6 @@
 # OhMyDashboard — Tasks
 
-> Generated from BRIEF.md. Phase 1 & Phase 2 implementation complete.
+> Generated from BRIEF.md. All 3 phases complete.
 
 ---
 
@@ -103,17 +103,40 @@
 
 ---
 
-## Phase 3: Advanced (Future)
+## Phase 3: Real Data Integration ✅
 
-### Real Data Integration
-- [ ] Build OpenCode CLI adapter (`server/opencode-adapter.ts`)
-- [ ] Wrap `opencode session list --json` and `opencode session info --json`
-- [ ] Add in-memory cache with TTL for CLI results
-- [ ] Replace mock data with real CLI output
+### 17. Direct Filesystem Reader ✅
+- [x] 17.1 Discovered OpenCode stores ALL data as JSON at `~/.local/share/opencode/storage/`
+- [x] 17.2 Created `server/opencode-reader.ts` — reads session, message, part, project JSON files directly
+- [x] 17.3 Raw types: `RawSession`, `RawMessage`, `RawPart`, `RawProject` matching OpenCode's on-disk format
+- [x] 17.4 10 transform methods converting raw data → dashboard types (sessions, stats, usage, cost, models, heatmap)
+- [x] 17.5 Active agent detection: sessions updated within last 5 minutes
+- [x] 17.6 Graceful error handling: malformed/missing JSON files silently skipped
 
-### Advanced Features
-- [ ] SSE real-time updates (if OpenCode supports it)
-- [ ] Cost alerts / budget warnings
+### 18. In-Memory Cache ✅
+- [x] 18.1 Created `server/cache.ts` — generic `TTLCache<T>` class with 30s default TTL
+- [x] 18.2 All reader methods cached to avoid re-reading thousands of files per request
+- [x] 18.3 Cache invalidation via `invalidateCache()` method
+
+### 19. Server Rewrite ✅
+- [x] 19.1 Rewrote `server/index.ts` — removed ALL mock data (370→65 lines)
+- [x] 19.2 All 8 endpoints now return real data from OpenCode storage
+- [x] 19.3 Date range filtering preserved (?range=today|week|month|all)
+- [x] 19.4 Session messages endpoint reads actual message parts for content
+
+### 20. Types Update ✅
+- [x] 20.1 Added `tokens?: { input: number; output: number; reasoning: number }` to `SessionMessage`
+
+### 21. Verification ✅
+- [x] 21.1 Build passes (`tsc -b && vite build` — 2353 modules, no errors)
+- [x] 21.2 All 8 API endpoints tested with real data: 196 sessions, 5,015 messages
+- [x] 21.3 Real agent distribution: sisyphus (90%), build (7%), explore/librarian/sisyphus-junior
+- [x] 21.4 Real model distribution: claude-opus-4-5-thinking (64%), claude-opus-4-6-thinking (24%)
+- [x] 21.5 Cost data shows $0 — accurate (vibeproxy providers don't report costs)
+
+### Future Enhancements
+- [ ] SSE real-time updates (OpenCode has SSE in sst/opencode-sdk-go)
+- [ ] Cost estimation from token counts (when providers don't report cost)
 - [ ] Agent performance metrics (time to complete)
 - [ ] Export data to CSV/JSON
 - [ ] Multi-project comparison view
@@ -133,7 +156,7 @@ ohmydashboard/
 │   ├── main.tsx                    # Entry point
 │   ├── index.css                   # Tailwind v4 import + dark theme
 │   ├── App.tsx                     # Main dashboard layout (v0.2.0)
-│   ├── types/opencode.ts           # TypeScript interfaces (Phase 1 + 2)
+│   ├── types/opencode.ts           # TypeScript interfaces (Phase 1 + 2 + 3)
 │   ├── lib/utils.ts                # formatCost, formatTimeAgo, cn()
 │   ├── hooks/useDashboardData.ts   # Auto-refresh data fetcher (7 endpoints)
 │   └── components/dashboard/
@@ -145,7 +168,9 @@ ohmydashboard/
 │       ├── ModelDistribution.tsx   # Model usage donut chart (Recharts)
 │       └── ActivityHeatmap.tsx     # 7×24 activity grid (CSS)
 └── server/
-    └── index.ts                    # Hono API server (8 endpoints, port 3456)
+    ├── index.ts                    # Hono API server (8 endpoints, port 3456)
+    ├── opencode-reader.ts          # Reads OpenCode JSON storage directly
+    └── cache.ts                    # Generic TTL cache (30s default)
 ```
 
 ## Commands

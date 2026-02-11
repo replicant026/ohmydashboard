@@ -1,5 +1,5 @@
 import type { AgentActivity } from '@/types/opencode'
-import { cn, formatElapsed, getAgentColor, truncateId } from '@/lib/utils'
+import { cn, formatElapsed, getAgentColor } from '@/lib/utils'
 
 interface Props {
   agents: AgentActivity[]

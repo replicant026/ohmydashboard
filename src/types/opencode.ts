@@ -68,6 +68,7 @@ export interface SessionMessage {
   agent?: string
   model?: string
   cost?: number
+  tokens?: { input: number; output: number; reasoning: number }
 }
 
 export type DateRange = 'today' | 'week' | 'month' | 'all'
