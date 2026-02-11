@@ -25,9 +25,9 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<
 export function CostChart({ data, loading }: CostChartProps) {
   if (loading) {
     return (
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 h-full flex flex-col">
         <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider mb-4">Cost History</h2>
-        <div className="h-48 bg-zinc-800/50 rounded-lg animate-pulse" />
+        <div className="h-48 bg-zinc-800/50 rounded-lg animate-pulse flex-1" />
       </div>
     )
   }
@@ -35,7 +35,7 @@ export function CostChart({ data, loading }: CostChartProps) {
   const totalCost = data.reduce((sum, d) => sum + d.cost, 0)
 
   return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
+    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 h-full flex flex-col">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider">Cost History</h2>
         <span className="text-xs text-zinc-500 font-mono">14-day total: <span className="text-emerald-400">{formatCost(totalCost)}</span></span>

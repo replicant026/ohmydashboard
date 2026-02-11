@@ -21,7 +21,7 @@ export function ActiveAgents({ agents, loading }: Props) {
   })
 
   return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+    <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden h-full flex flex-col">
       <div className="px-5 py-4 border-b border-zinc-800">
         <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider">Active Agents</h2>
       </div>

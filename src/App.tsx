@@ -1,8 +1,9 @@
 import { RefreshCw, Calendar } from 'lucide-react'
+import { Logo } from '@/components/Logo'
 import { useDashboardData } from '@/hooks/useDashboardData'
 import { SummaryCards } from '@/components/dashboard/SummaryCards'
 import { ActiveAgents } from '@/components/dashboard/ActiveAgents'
-import { SessionTimeline } from '@/components/dashboard/SessionTimeline'
+import SessionTable from '@/components/dashboard/SessionTable'
 import { AgentLeaderboard } from '@/components/dashboard/AgentLeaderboard'
 import { CostChart } from '@/components/dashboard/CostChart'
 import { ModelDistribution } from '@/components/dashboard/ModelDistribution'
@@ -31,11 +32,9 @@ function App() {
       <header className="border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-sm font-bold">
-              ⚡
-            </div>
+            <Logo className="w-8 h-8" />
             <h1 className="text-lg font-semibold text-zinc-100">OhMyDashboard</h1>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-500 font-mono">v0.2.0</span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-500 font-mono">v0.4.0</span>
           </div>
 
           <div className="flex items-center gap-3">
@@ -108,8 +107,8 @@ function App() {
         {/* Row 4: Activity Heatmap */}
         <ActivityHeatmap data={activity} loading={loading} />
 
-        {/* Row 5: Session Timeline */}
-        <SessionTimeline sessions={sessions} loading={loading} />
+        {/* Row 5: Sessions Table */}
+        <SessionTable sessions={sessions} loading={loading} />
       </main>
 
       {/* Footer */}

@@ -1,6 +1,6 @@
 # OhMyDashboard — Tasks
 
-> Generated from BRIEF.md. All 3 phases complete.
+> Generated from BRIEF.md. All 5 phases complete.
 
 ---
 
@@ -143,26 +143,82 @@
 
 ---
 
+## Phase 4: Session Table with Pagination & Filters ✅
+
+### 22. TanStack Table Integration ✅
+- [x] 22.1 Installed `@tanstack/react-table` v8
+- [x] 22.2 Created `SessionTable.tsx` replacing `SessionTimeline.tsx`
+- [x] 22.3 Column definitions: Title, Directory, Agents, Messages, Cost, Updated
+- [x] 22.4 All columns sortable (click header to toggle asc/desc/none)
+
+### 23. Pagination ✅
+- [x] 23.1 Client-side pagination with page size selector (10/20/50)
+- [x] 23.2 Previous/Next page navigation buttons
+- [x] 23.3 Page info display ("Page X of Y")
+- [x] 23.4 Showing row range ("Showing 1-10 of 196 sessions")
+
+### 24. Filtering ✅
+- [x] 24.1 Global search input — fuzzy matches across title, directory, agents, ID
+- [x] 24.2 Agent dropdown filter — multi-select with checkboxes, auto-populated from data
+- [x] 24.3 Directory dropdown filter — select from unique project directories
+- [x] 24.4 Active filter tags with click-to-remove
+- [x] 24.5 "Clear all" button when filters are active
+
+### 25. Expandable Row Detail ✅
+- [x] 25.1 Click row to expand/collapse message view (preserved from SessionTimeline)
+- [x] 25.2 Fetches `/api/sessions/:id/messages` on expand
+- [x] 25.3 Message timeline with user/assistant icons, agent, model, cost, timestamp
+
+### 26. Build & Verify ✅
+- [x] 26.1 Build passes (`tsc -b && vite build` — 2355 modules, no errors)
+- [x] 26.2 Bundle: 636KB JS, 34KB CSS
+
+---
+
+## Phase 5: Branding & Equal Height Layout ✅
+
+### 27. Custom Logo & Favicon ✅
+- [x] 27.1 Created custom SVG logo (`src/components/Logo.tsx`) — radar/monitoring motif with emerald accents
+- [x] 27.2 Logo design: 2 concentric rings, center dot, radar sweep line, 3 agent indicator dots
+- [x] 27.3 Created SVG favicon (`public/favicon.svg`) matching logo design
+- [x] 27.4 Updated `index.html` — new favicon path + page title "OhMyDashboard — Agent Monitor"
+- [x] 27.5 Replaced emoji logo in header with inline SVG `<Logo />` component
+- [x] 27.6 Version bumped to v0.4.0
+
+### 28. Equal Height Columns ✅
+- [x] 28.1 Added `h-full flex flex-col` to all 5 dashboard card components
+- [x] 28.2 Components fixed: ActiveAgents, AgentLeaderboard, CostChart, ModelDistribution, ActivityHeatmap
+- [x] 28.3 Loading state wrappers also use `h-full flex flex-col` for consistency
+- [x] 28.4 CSS Grid's implicit `items-stretch` + component `h-full` ensures equal row heights
+
+### 29. Build & Verify ✅
+- [x] 29.1 Build passes (`tsc -b && vite build` — 2356 modules, no errors)
+- [x] 29.2 Bundle: 637KB JS, 33KB CSS
+
+---
+
 ## Architecture
 
 ```
 ohmydashboard/
 ├── BRIEF.md                        # Project brief
 ├── TASKS.md                        # This file
-├── package.json                    # Vite + React 19 + Tailwind v4 + Hono
+├── package.json                    # Vite + React 19 + Tailwind v4 + Hono + TanStack Table
 ├── vite.config.ts                  # Tailwind plugin, @/ alias, proxy
 ├── tsconfig.app.json               # Strict TS, path aliases
 ├── src/
 │   ├── main.tsx                    # Entry point
 │   ├── index.css                   # Tailwind v4 import + dark theme
-│   ├── App.tsx                     # Main dashboard layout (v0.2.0)
-│   ├── types/opencode.ts           # TypeScript interfaces (Phase 1 + 2 + 3)
+│   ├── App.tsx                     # Main dashboard layout (v0.4.0)
+│   ├── types/opencode.ts           # TypeScript interfaces (Phase 1-4)
 │   ├── lib/utils.ts                # formatCost, formatTimeAgo, cn()
 │   ├── hooks/useDashboardData.ts   # Auto-refresh data fetcher (7 endpoints)
+│   ├── components/Logo.tsx          # Custom SVG logo component (NEW)
 │   └── components/dashboard/
 │       ├── SummaryCards.tsx         # 4 stat cards
 │       ├── ActiveAgents.tsx        # Agent activity table
-│       ├── SessionTimeline.tsx     # Expandable sessions + message view
+│       ├── SessionTable.tsx        # TanStack Table with pagination + filters (NEW)
+│       ├── SessionTimeline.tsx     # Legacy expandable sessions (replaced)
 │       ├── AgentLeaderboard.tsx    # Agent usage bar chart (CSS)
 │       ├── CostChart.tsx           # 14-day cost area chart (Recharts)
 │       ├── ModelDistribution.tsx   # Model usage donut chart (Recharts)
