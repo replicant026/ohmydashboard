@@ -28,7 +28,6 @@ import {
 } from 'lucide-react'
 import type { Session, SessionMessage } from '../../types/opencode'
 import {
-  formatCost,
   formatTimeAgo,
   getAgentColor,
   getAgentChartColor,
@@ -181,15 +180,6 @@ export default function SessionTable({ sessions, loading }: SessionTableProps) {
         cell: ({ getValue }) => (
           <span className="text-sm text-zinc-300 tabular-nums">
             {getValue()}
-          </span>
-        ),
-      }),
-      columnHelper.accessor('cost', {
-        header: 'Cost',
-        size: 80,
-        cell: ({ getValue }) => (
-          <span className="text-sm text-zinc-300 tabular-nums">
-            {formatCost(getValue())}
           </span>
         ),
       }),
@@ -599,11 +589,6 @@ function SessionRow({
                           {msg.model && (
                             <span className="text-xs text-zinc-500">
                               {msg.model}
-                            </span>
-                          )}
-                          {msg.cost !== undefined && msg.cost > 0 && (
-                            <span className="text-xs text-emerald-500">
-                              {formatCost(msg.cost)}
                             </span>
                           )}
                           <span className="text-xs text-zinc-600">

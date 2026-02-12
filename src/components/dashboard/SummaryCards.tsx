@@ -1,6 +1,5 @@
-import { Activity, MessagesSquare, DollarSign, Users, Coins } from 'lucide-react'
+import { Activity, MessagesSquare, Users, Coins } from 'lucide-react'
 import type { DashboardStats } from '@/types/opencode'
-import { formatCost } from '@/lib/utils'
 
 function formatTokens(n: number): string {
   if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`
@@ -18,13 +17,12 @@ const cards = [
   { key: 'totalSessions' as const, label: 'Total Sessions', icon: Activity, accent: 'text-blue-400' },
   { key: 'totalMessages' as const, label: 'Total Messages', icon: MessagesSquare, accent: 'text-emerald-400' },
   { key: 'totalTokens' as const, label: 'Total Tokens', icon: Coins, accent: 'text-cyan-400', format: formatTokens },
-  { key: 'totalCost' as const, label: 'Total Cost', icon: DollarSign, accent: 'text-amber-400', format: formatCost },
   { key: 'activeAgents' as const, label: 'Active Agents', icon: Users, accent: 'text-purple-400' },
 ]
 
 export function SummaryCards({ stats, loading }: Props) {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {cards.map(({ key, label, icon: Icon, accent, format }) => (
         <div
           key={key}

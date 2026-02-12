@@ -1,6 +1,6 @@
 # OhMyDashboard — Tasks
 
-> Generated from BRIEF.md. All 7 phases complete.
+> Generated from BRIEF.md. Phases 1-7 complete. Phase 8 planned.
 
 ---
 
@@ -236,6 +236,45 @@
 - [x] 35.2 Build passes (`npm run build`)
 - [x] 35.3 All API endpoints work through unified server
 - [x] 35.4 Static assets (JS, CSS, SVG) served with correct content types
+
+---
+
+## Phase 8: npm/bunx Runtime Packaging Reliability (Planned)
+
+### 36. Dependency Classification & Runtime Imports
+- [x] 36.1 Audit all runtime imports used by CLI path (`bin/cli.ts` → `server/index.ts`) and list required runtime packages
+- [x] 36.2 Ensure runtime-only packages are in `dependencies` (especially `@hono/node-server`, `hono`)
+- [x] 36.3 Ensure dev-only packages remain in `devDependencies` to avoid bloated publish artifacts
+- [x] 36.4 Add explicit note in docs: anything imported by shipped runtime entrypoints must be runtime dependency
+
+### 37. Publish Artifact Integrity (bin + files)
+- [x] 37.1 Validate `bin` target exists in packed tarball (`npm pack` + inspect)
+- [x] 37.2 Align `bin` entry and packaged files strategy (either `./bin/cli.ts` or built `dist/cli.*`, but not mixed)
+- [x] 37.3 Verify `files` whitelist includes all runtime-needed paths (CLI entry, server runtime, built UI assets)
+- [x] 37.4 Add fail-fast check script to assert required artifacts exist before publish
+
+### 38. Prepublish Guardrails
+- [x] 38.1 Expand `prepublishOnly` pipeline to include: build, pack, and tarball integrity checks
+- [x] 38.2 Add CI/local command to validate packed manifest (`package/package.json`) and runtime file presence
+- [x] 38.3 Add smoke execution check against tarball install (simulate `npx`/`bunx` execution path)
+- [x] 38.4 Abort publish automatically if smoke test fails
+
+### 39. npx/bunx Smoke Test Matrix
+- [ ] 39.1 Test `npx @radenadri/ohmydashboard@<version>` on clean cache/temp environment
+- [ ] 39.2 Test `bunx @radenadri/ohmydashboard@<version>` on clean cache/temp environment
+- [x] 39.3 Verify CLI boot, API availability (`/api/stats`), and static UI load from packaged install
+- [x] 39.4 Record expected startup output and troubleshooting hints for users
+
+### 40. Docs Update for Safe Publishing
+- [x] 40.1 Update `GUIDE.md` with packaging safety checklist (dependencies vs devDependencies, bin/files alignment)
+- [x] 40.2 Update `README.md` with minimal run-time requirements and quick diagnostics section
+- [x] 40.3 Add release checklist section covering `npm pack` inspection + smoke tests before `npm publish`
+
+### 41. Verification & Release
+- [x] 41.1 Validate local build passes after packaging fixes (`npm run build`)
+- [x] 41.2 Validate tarball integrity checks pass
+- [ ] 41.3 Publish patch release and verify `@latest` points to fixed package
+- [ ] 41.4 Confirm both `npx` and `bunx` run successfully from registry package
 
 ---
 

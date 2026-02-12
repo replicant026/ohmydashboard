@@ -9,7 +9,7 @@ See which agents are running, how many tokens you've burned, and what your sessi
 ## Quick Start
 
 ```bash
-bunx ohmydashboard@latest
+bunx @radenadri/ohmydashboard@latest
 ```
 
 Opens at [http://127.0.0.1:51234](http://127.0.0.1:51234). That's it.
@@ -17,8 +17,8 @@ Opens at [http://127.0.0.1:51234](http://127.0.0.1:51234). That's it.
 ### Options
 
 ```bash
-bunx ohmydashboard --port 8080       # custom port
-bunx ohmydashboard --host 0.0.0.0    # expose to network
+bunx @radenadri/ohmydashboard --port 8080       # custom port
+bunx @radenadri/ohmydashboard --host 0.0.0.0    # expose to network
 ```
 
 ## Features
@@ -107,6 +107,46 @@ ohmydashboard/
 
 - **Bun** >= 1.1.0
 - **OpenCode** installed and used (needs `~/.local/share/opencode/storage/` to exist)
+
+## Quick Diagnostics (if `bunx` fails)
+
+If you see module resolution errors (example: `Cannot find module '@hono/node-server'`), run:
+
+```bash
+# inspect what would be published
+npm pack --dry-run
+
+# verify runtime dependency classification
+npm run verify:runtime-imports
+
+# verify packed artifacts contain CLI + runtime server files
+npm run verify:pack
+
+# full end-to-end local tarball smoke test
+npm run verify:smoke
+```
+
+Expected smoke-test behavior:
+- Local tarball installs to temp directory
+- CLI boots successfully
+- `GET /api/stats` returns `200`
+- `/` (dashboard UI) returns `200`
+
+## Safe Release Checklist
+
+Before `npm publish`, run:
+
+```bash
+npm run release:verify
+```
+
+This executes, in order:
+1. Runtime import audit (`verify:runtime-imports`)
+2. Full build (`npm run build`)
+3. Pack integrity check (`verify:pack`)
+4. Local tarball smoke test (`verify:smoke`)
+
+If any step fails, publish is blocked by `prepublishOnly`.
 
 ## License
 

@@ -1,6 +1,6 @@
 {
   "name": "@radenadri/ohmydashboard",
-  "version": "0.5.0",
+  "version": "0.6.1",
   "description": "Agent monitoring dashboard for OpenCode — run with bunx ohmydashboard",
   "type": "module",
   "bin": {
@@ -20,11 +20,16 @@
     "dev:server": "tsx watch server/index.ts",
     "build": "tsc -b && vite build",
     "build:ui": "vite build",
-    "prepublishOnly": "npm run build:ui",
+    "verify:runtime-imports": "node scripts/verify-runtime-imports.mjs",
+    "verify:pack": "node scripts/verify-pack.mjs",
+    "verify:smoke": "node scripts/smoke-local-pack.mjs",
+    "release:verify": "npm run verify:runtime-imports && npm run build && npm run verify:pack && npm run verify:smoke",
+    "prepublishOnly": "npm run release:verify",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@hono/node-server": "^1.19.9",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-table": "^8.21.3",
     "hono": "^4.11.9",
@@ -36,7 +41,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
-    "@hono/node-server": "^1.19.9",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
