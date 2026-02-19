@@ -62,6 +62,16 @@ interface RawProject {
   time: { created: number; updated: number }
 }
 
+
+interface BunSqliteStatement {
+  all(...params: unknown[]): unknown[]
+}
+
+interface BunSqliteDatabase {
+  query(sql: string): BunSqliteStatement
+  close?: () => void
+}
+
 // --- Dashboard types (what the API returns) ---
 
 export interface Session {
@@ -389,6 +399,7 @@ export class OpenCodeReader {
   private cache = new TTLCache<unknown>(30_000)
   private backendPromise: Promise<StorageBackend>
   private storageBasePromise: Promise<string>
+
   private sqliteTableNameCache = new Map<string, string | null>()
   private sqliteLoggedError = false
 
@@ -413,9 +424,37 @@ export class OpenCodeReader {
     return this.backendPromise
   }
 
+  private async sqliteQueryViaBun(sql: string): Promise<Record<string, unknown>[] | null> {
+    if (this.bunSqliteUnavailable) return null
+
+    const backend = await this.getBackendInfo()
+    if (backend.type !== 'sqlite') return []
+
+    try {
+      if (!this.bunSqliteDb || this.bunSqliteDbPath !== backend.dbPath) {
+        this.bunSqliteDb?.close?.()
+        const sqliteModule = await import('bun:sqlite')
+        const BunDatabase = sqliteModule.Database as unknown as new (dbPath: string, options?: { readonly?: boolean }) => BunSqliteDatabase
+        this.bunSqliteDb = new BunDatabase(backend.dbPath, { readonly: true })
+        this.bunSqliteDbPath = backend.dbPath
+      }
+
+      return asRecordArray(this.bunSqliteDb.query(sql).all())
+    } catch {
+      this.bunSqliteUnavailable = true
+      this.bunSqliteDb?.close?.()
+      this.bunSqliteDb = null
+      this.bunSqliteDbPath = null
+      return null
+    }
+  }
+
   private async sqliteQuery(sql: string): Promise<Record<string, unknown>[]> {
     const backend = await this.getBackendInfo()
     if (backend.type !== 'sqlite') return []
+
+    const bunRows = await this.sqliteQueryViaBun(sql)
+    if (bunRows) return bunRows
 
     try {
       const { stdout } = await execFileAsync('sqlite3', [backend.dbPath, '-json', sql], { maxBuffer: 20 * 1024 * 1024 })
@@ -423,7 +462,7 @@ export class OpenCodeReader {
     } catch (error) {
       if (!this.sqliteLoggedError) {
         this.sqliteLoggedError = true
-        console.warn('[OhMyDashboard] SQLite query failed. Ensure SQLite schema/table names are compatible.', error)
+
       }
       return []
     }
