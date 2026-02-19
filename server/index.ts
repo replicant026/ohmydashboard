@@ -55,8 +55,18 @@ const isDirectRun = process.argv[1]?.endsWith('server/index.ts') ||
 
 if (isDirectRun) {
   const app = createApp()
+  const reader = new OpenCodeReader()
   const port = 3456
-  console.log(`🚀 OhMyDashboard API running on http://localhost:${port}`)
-  console.log(`📂 Reading data from ~/.local/share/opencode/storage/`)
+  reader.getBackendInfo().then((backend) => {
+    console.log(`🚀 OhMyDashboard API running on http://localhost:${port}`)
+    if (backend.type === 'sqlite') {
+      console.log(`🗄️ Reading sessions from SQLite: ${backend.dbPath}`)
+    } else {
+      console.log(`📂 Reading data from ${backend.storageBase}`)
+    }
+  }).catch(() => {
+    console.log(`🚀 OhMyDashboard API running on http://localhost:${port}`)
+    console.log('📂 Reading data from default OpenCode storage path')
+  })
   serve({ fetch: app.fetch, port })
 }
