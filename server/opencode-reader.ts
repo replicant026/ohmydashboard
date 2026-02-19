@@ -257,6 +257,32 @@ function getNumberField(row: Record<string, unknown>, keys: string[]): number | 
   return undefined
 }
 
+function parseJsonObject(value: unknown): Record<string, unknown> | null {
+  if (!value) return null
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value)
+      return parsed && typeof parsed === 'object' ? parsed as Record<string, unknown> : null
+    } catch {
+      return null
+    }
+  }
+  return typeof value === 'object' ? value as Record<string, unknown> : null
+}
+
+function pickString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() ? value : undefined
+}
+
+function pickNumber(value: unknown): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string' && value.trim()) {
+    const parsed = Number(value)
+    if (Number.isFinite(parsed)) return parsed
+  }
+  return undefined
+}
+
 function normalizeTimestamp(value?: number): number {
   if (!value || !Number.isFinite(value)) return Date.now()
   return value < 1_000_000_000_000 ? value * 1000 : value
@@ -287,27 +313,55 @@ function getTimeField(row: Record<string, unknown>): { created: number; updated:
 }
 
 function parseTokens(value: unknown): RawMessage['tokens'] | undefined {
-  if (!value) return undefined
-  let parsed: unknown = value
-  if (typeof value === 'string') {
-    try {
-      parsed = JSON.parse(value)
-    } catch {
-      return undefined
-    }
-  }
-  if (!parsed || typeof parsed !== 'object') return undefined
-  const tokenObj = parsed as Record<string, unknown>
-  const cacheObj = (tokenObj.cache && typeof tokenObj.cache === 'object') ? tokenObj.cache as Record<string, unknown> : {}
+  const tokenObj = parseJsonObject(value)
+  if (!tokenObj) return undefined
+  const usageObj = parseJsonObject(tokenObj.usage)
+  const cacheObj = parseJsonObject(tokenObj.cache) ?? {}
+
+  const input = pickNumber(tokenObj.input) ?? pickNumber(tokenObj.input_tokens) ?? pickNumber(tokenObj.prompt) ?? pickNumber(usageObj?.input) ?? pickNumber(usageObj?.input_tokens)
+  const output = pickNumber(tokenObj.output) ?? pickNumber(tokenObj.output_tokens) ?? pickNumber(tokenObj.completion) ?? pickNumber(usageObj?.output) ?? pickNumber(usageObj?.output_tokens)
+  const reasoning = pickNumber(tokenObj.reasoning) ?? pickNumber(tokenObj.reasoning_tokens) ?? pickNumber(usageObj?.reasoning) ?? pickNumber(usageObj?.reasoning_tokens) ?? 0
+
+  if (input === undefined && output === undefined && reasoning === 0) return undefined
 
   return {
-    input: Number(tokenObj.input ?? 0),
-    output: Number(tokenObj.output ?? 0),
-    reasoning: Number(tokenObj.reasoning ?? 0),
+    input: input ?? 0,
+    output: output ?? 0,
+    reasoning,
     cache: {
-      read: Number(cacheObj.read ?? 0),
-      write: Number(cacheObj.write ?? 0),
+      read: pickNumber(cacheObj.read) ?? pickNumber(cacheObj.input) ?? 0,
+      write: pickNumber(cacheObj.write) ?? pickNumber(cacheObj.output) ?? 0,
     },
+  }
+}
+
+function resolveMessageFields(row: Record<string, unknown>) {
+  const meta = parseJsonObject(row.meta) ?? parseJsonObject(row.metadata) ?? parseJsonObject(row.info) ?? parseJsonObject(row.data)
+  const usage = parseJsonObject(meta?.usage)
+  const model = parseJsonObject(meta?.model)
+
+  const modelID = getStringField(row, ['modelID', 'model_id', 'modelId']) ||
+    pickString(meta?.modelID) || pickString(meta?.model_id) || pickString(meta?.modelId) ||
+    pickString(meta?.model) || pickString(model?.id) || pickString(model?.name)
+
+  const providerID = getStringField(row, ['providerID', 'provider_id', 'providerId']) ||
+    pickString(meta?.providerID) || pickString(meta?.provider_id) || pickString(meta?.providerId) ||
+    pickString(model?.provider)
+
+  const agent = getStringField(row, ['agent', 'agentName', 'agent_name']) ||
+    pickString(meta?.agent) || pickString(meta?.agentName) || pickString(meta?.agent_name)
+
+  const cost = getNumberField(row, ['cost', 'total_cost', 'totalCost']) ??
+    pickNumber(meta?.cost) ?? pickNumber(meta?.totalCost) ?? pickNumber(meta?.total_cost)
+
+  const tokens = parseTokens(row.tokens) ?? parseTokens(meta?.tokens) ?? parseTokens(usage)
+
+  return {
+    modelID: modelID || undefined,
+    providerID: providerID || undefined,
+    agent: agent || undefined,
+    cost,
+    tokens,
   }
 }
 
@@ -518,20 +572,23 @@ export class OpenCodeReader {
     const where = sessionId ? ` WHERE sessionID = '${escapeSqlString(sessionId)}' OR session_id = '${escapeSqlString(sessionId)}' OR sessionId = '${escapeSqlString(sessionId)}'` : ''
     const rows = await this.sqliteQuery(`SELECT * FROM ${messageTable}${where};`)
 
-    return rows.map((row) => ({
+    return rows.map((row) => {
+      const resolved = resolveMessageFields(row)
+      return {
       id: getStringField(row, ['id']),
       sessionID: getStringField(row, ['sessionID', 'session_id', 'sessionId']),
       role: getStringField(row, ['role']) || 'assistant',
       time: getTimeField(row),
       parentID: getStringField(row, ['parentID', 'parent_id', 'parentId']) || undefined,
-      modelID: getStringField(row, ['modelID', 'model_id', 'modelId']) || undefined,
-      providerID: getStringField(row, ['providerID', 'provider_id', 'providerId']) || undefined,
+      modelID: resolved.modelID,
+      providerID: resolved.providerID,
       mode: getStringField(row, ['mode']) || undefined,
-      agent: getStringField(row, ['agent']) || undefined,
-      cost: getNumberField(row, ['cost']),
-      tokens: parseTokens(row.tokens),
+      agent: resolved.agent,
+      cost: resolved.cost,
+      tokens: resolved.tokens,
       finish: getStringField(row, ['finish']) || undefined,
-    })).filter((msg) => msg.id && msg.sessionID)
+      }
+    }).filter((msg) => msg.id && msg.sessionID)
   }
 
   private async sqliteLoadParts(messageId: string): Promise<RawPart[]> {
