@@ -389,6 +389,8 @@ export class OpenCodeReader {
   private cache = new TTLCache<unknown>(30_000)
   private backendPromise: Promise<StorageBackend>
   private storageBasePromise: Promise<string>
+  private sqliteTableNameCache = new Map<string, string | null>()
+  private sqliteLoggedError = false
 
   constructor() {
     this.backendPromise = resolveBackend()
@@ -418,9 +420,31 @@ export class OpenCodeReader {
     try {
       const { stdout } = await execFileAsync('sqlite3', [backend.dbPath, '-json', sql], { maxBuffer: 20 * 1024 * 1024 })
       return asRecordArray(JSON.parse(stdout || '[]'))
-    } catch {
+    } catch (error) {
+      if (!this.sqliteLoggedError) {
+        this.sqliteLoggedError = true
+        console.warn('[OhMyDashboard] SQLite query failed. Ensure SQLite schema/table names are compatible.', error)
+      }
       return []
     }
+  }
+
+  private async sqliteResolveTableName(cacheKey: string, candidates: string[]): Promise<string | null> {
+    if (this.sqliteTableNameCache.has(cacheKey)) {
+      return this.sqliteTableNameCache.get(cacheKey) ?? null
+    }
+
+    for (const tableName of candidates) {
+      const escaped = escapeSqlString(tableName)
+      const rows = await this.sqliteQuery(`SELECT name FROM sqlite_master WHERE type='table' AND name='${escaped}' LIMIT 1;`)
+      if (rows.length > 0) {
+        this.sqliteTableNameCache.set(cacheKey, tableName)
+        return tableName
+      }
+    }
+
+    this.sqliteTableNameCache.set(cacheKey, null)
+    return null
   }
 
   private async sqliteTableColumns(table: string): Promise<Set<string>> {
@@ -429,7 +453,9 @@ export class OpenCodeReader {
   }
 
   private async sqliteLoadSessions(): Promise<RawSession[]> {
-    const rows = await this.sqliteQuery('SELECT * FROM session;')
+    const sessionTable = await this.sqliteResolveTableName('session', ['session', 'sessions'])
+    if (!sessionTable) return []
+    const rows = await this.sqliteQuery(`SELECT * FROM ${sessionTable};`)
     return rows.map((row) => {
       const id = getStringField(row, ['id'])
       const title = getStringField(row, ['title', 'slug'])
@@ -448,8 +474,10 @@ export class OpenCodeReader {
   }
 
   private async sqliteLoadMessages(sessionId?: string): Promise<RawMessage[]> {
+    const messageTable = await this.sqliteResolveTableName('message', ['message', 'messages'])
+    if (!messageTable) return []
     const where = sessionId ? ` WHERE sessionID = '${escapeSqlString(sessionId)}' OR session_id = '${escapeSqlString(sessionId)}' OR sessionId = '${escapeSqlString(sessionId)}'` : ''
-    const rows = await this.sqliteQuery(`SELECT * FROM message${where};`)
+    const rows = await this.sqliteQuery(`SELECT * FROM ${messageTable}${where};`)
 
     return rows.map((row) => ({
       id: getStringField(row, ['id']),
@@ -468,8 +496,10 @@ export class OpenCodeReader {
   }
 
   private async sqliteLoadParts(messageId: string): Promise<RawPart[]> {
+    const partTable = await this.sqliteResolveTableName('part', ['part', 'parts'])
+    if (!partTable) return []
     const rows = await this.sqliteQuery(
-      `SELECT * FROM part WHERE messageID = '${escapeSqlString(messageId)}' OR message_id = '${escapeSqlString(messageId)}' OR messageId = '${escapeSqlString(messageId)}';`
+      `SELECT * FROM ${partTable} WHERE messageID = '${escapeSqlString(messageId)}' OR message_id = '${escapeSqlString(messageId)}' OR messageId = '${escapeSqlString(messageId)}';`
     )
 
     return rows.map((row) => ({
@@ -489,9 +519,11 @@ export class OpenCodeReader {
     return this.cachedFetch('projects', async () => {
       const backend = await this.getBackendInfo()
       if (backend.type === 'sqlite') {
-        const columns = await this.sqliteTableColumns('project')
+        const projectTable = await this.sqliteResolveTableName('project', ['project', 'projects'])
+        if (!projectTable) return []
+        const columns = await this.sqliteTableColumns(projectTable)
         if (columns.size === 0) return []
-        const rows = await this.sqliteQuery('SELECT * FROM project;')
+        const rows = await this.sqliteQuery(`SELECT * FROM ${projectTable};`)
         return rows.map((row) => ({
           id: getStringField(row, ['id']),
           worktree: getStringField(row, ['worktree', 'directory']),
