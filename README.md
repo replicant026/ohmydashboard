@@ -14,6 +14,57 @@ bunx @radenadri/ohmydashboard@latest
 
 Opens at [http://127.0.0.1:51234](http://127.0.0.1:51234). That's it.
 
+## Installing your fork (oh-my-opencode users)
+
+If you maintain your own fork, you can run it directly from GitHub without publishing to npm:
+
+```bash
+bunx github:<your-user>/<your-fork>
+```
+
+Examples:
+
+```bash
+bunx github:felip/ohmydashboard
+bunx github:felip/ohmydashboard#main
+```
+
+If you prefer to clone and run locally:
+
+```bash
+git clone https://github.com/<your-user>/<your-fork>.git
+cd <your-fork>
+npm install
+npm run build
+bun bin/cli.ts
+```
+
+### Make it work with custom OpenCode/oh-my-opencode storage
+
+If your setup stores sessions in a non-default folder, set one of these env vars before running:
+
+```bash
+OPENCODE_STORAGE_PATH=/custom/path/to/opencode/storage
+# or
+OPENCODE_STORAGE=/custom/path/to/opencode/storage
+```
+
+PowerShell (Windows):
+
+```powershell
+$env:OPENCODE_STORAGE_PATH = "C:\\path\\to\\opencode\\storage"
+bunx github:<your-user>/<your-fork>
+```
+
+CMD (Windows):
+
+```cmd
+set OPENCODE_STORAGE_PATH=C:\path\to\opencode\storage
+bunx github:<your-user>/<your-fork>
+```
+
+The CLI now prints the detected storage path at startup so you can confirm it's reading the right location.
+
 ### Options
 
 ```bash
@@ -36,17 +87,44 @@ bunx @radenadri/ohmydashboard --host 0.0.0.0    # expose to network
 
 ## How It Works
 
-OhMyDashboard reads OpenCode's local JSON storage directly from:
+OhMyDashboard reads OpenCode's local JSON storage directly. By default it auto-detects:
 
 ```
 ~/.local/share/opencode/storage/
-├── sessions/     # Session metadata
-├── messages/     # Message content
-├── parts/        # Message parts (tool calls, results)
-└── projects/     # Project registry
+├── session/      # Session metadata
+├── message/      # Message content
+├── part/         # Message parts (tool calls, results)
+└── project/      # Project registry
+```
+
+On Windows, it also checks:
+
+```
+%LOCALAPPDATA%\opencode\storage
+%USERPROFILE%\.local\share\opencode\storage
+```
+
+If your fork/plugin stores data elsewhere, set one of these env vars before starting:
+
+```bash
+OPENCODE_STORAGE_PATH=/custom/path/to/opencode/storage
+# or
+OPENCODE_STORAGE=/custom/path/to/opencode/storage
 ```
 
 No database, no API keys, no configuration. If OpenCode runs on your machine, the dashboard just works.
+
+If JSON session folders are missing but `opencode.db` exists, OhMyDashboard automatically falls back to SQLite and reads from:
+
+```
+~/.local/share/opencode/opencode.db (Windows: %USERPROFILE%\.local\share\opencode\opencode.db)
+```
+
+You can also override DB path:
+
+```bash
+OPENCODE_DB_PATH=/custom/path/to/opencode.db
+```
 
 ## Development
 
@@ -106,7 +184,7 @@ ohmydashboard/
 ## Requirements
 
 - **Bun** >= 1.1.0
-- **OpenCode** installed and used (needs `~/.local/share/opencode/storage/` to exist)
+- **OpenCode** installed and used (needs an OpenCode `storage` directory to exist)
 
 ## Quick Diagnostics (if `bunx` fails)
 
