@@ -101,6 +101,7 @@ On Windows, it also checks:
 
 ```
 %LOCALAPPDATA%\opencode\storage
+%USERPROFILE%\.local\share\opencode\storage
 ```
 
 If your fork/plugin stores data elsewhere, set one of these env vars before starting:
@@ -116,7 +117,7 @@ No database, no API keys, no configuration. If OpenCode runs on your machine, th
 If JSON session folders are missing but `opencode.db` exists, OhMyDashboard automatically falls back to SQLite and reads from:
 
 ```
-~/.local/share/opencode/opencode.db
+~/.local/share/opencode/opencode.db (Windows: %USERPROFILE%\.local\share\opencode\opencode.db)
 ```
 
 You can also override DB path:

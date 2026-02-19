@@ -135,8 +135,8 @@ export interface SessionMessage {
 
 // --- Constants ---
 
-const DEFAULT_STORAGE_BASE = path.join(os.homedir(), '.local/share/opencode/storage')
-const DEFAULT_DB_PATH = path.join(os.homedir(), '.local/share/opencode/opencode.db')
+const DEFAULT_STORAGE_BASE = path.join(os.homedir(), '.local', 'share', 'opencode', 'storage')
+const DEFAULT_DB_PATH = path.join(os.homedir(), '.local', 'share', 'opencode', 'opencode.db')
 
 type StorageBackend =
   | { type: 'json'; storageBase: string }
@@ -153,8 +153,9 @@ function getStorageCandidates(): string[] {
   if (process.platform === 'win32') {
     candidates.push(
       process.env.LOCALAPPDATA ? path.join(process.env.LOCALAPPDATA, 'opencode/storage') : null,
-      path.join(os.homedir(), 'AppData/Local/opencode/storage'),
-      path.join(os.homedir(), '.opencode/storage'),
+      path.join(os.homedir(), 'AppData', 'Local', 'opencode', 'storage'),
+      path.join(os.homedir(), '.local', 'share', 'opencode', 'storage'),
+      path.join(os.homedir(), '.opencode', 'storage'),
     )
   }
 
@@ -183,7 +184,8 @@ function getDbPathCandidates(): string[] {
   if (process.platform === 'win32') {
     candidates.push(
       process.env.LOCALAPPDATA ? path.join(process.env.LOCALAPPDATA, 'opencode/opencode.db') : null,
-      path.join(os.homedir(), 'AppData/Local/opencode/opencode.db'),
+      path.join(os.homedir(), 'AppData', 'Local', 'opencode', 'opencode.db'),
+      path.join(os.homedir(), '.local', 'share', 'opencode', 'opencode.db'),
     )
   }
 
