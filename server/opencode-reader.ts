@@ -7,10 +7,6 @@ import { TTLCache } from './cache'
 
 const execFileAsync = promisify(execFile)
 
-type BunSqliteDatabase = {
-  query: (sql: string) => { all: () => unknown[] }
-  close?: () => void
-}
 
 // --- Raw types (what OpenCode stores on disk) ---
 
@@ -394,9 +390,6 @@ export class OpenCodeReader {
   private cache = new TTLCache<unknown>(30_000)
   private backendPromise: Promise<StorageBackend>
   private storageBasePromise: Promise<string>
-  private bunSqliteDb: BunSqliteDatabase | null = null
-  private bunSqliteDbPath: string | null = null
-  private bunSqliteUnavailable = false
 
   constructor() {
     this.backendPromise = resolveBackend()
@@ -419,37 +412,11 @@ export class OpenCodeReader {
     return this.backendPromise
   }
 
-  private async sqliteQueryViaBun(sql: string): Promise<Record<string, unknown>[] | null> {
-    if (this.bunSqliteUnavailable) return null
-
-    const backend = await this.getBackendInfo()
-    if (backend.type !== 'sqlite') return []
-
-    try {
-      if (!this.bunSqliteDb || this.bunSqliteDbPath !== backend.dbPath) {
-        this.bunSqliteDb?.close?.()
-        const sqliteModule = await import('bun:sqlite')
-        const BunDatabase = sqliteModule.Database as unknown as new (dbPath: string, options?: { readonly?: boolean }) => BunSqliteDatabase
-        this.bunSqliteDb = new BunDatabase(backend.dbPath, { readonly: true })
-        this.bunSqliteDbPath = backend.dbPath
-      }
-
-      return asRecordArray(this.bunSqliteDb.query(sql).all())
-    } catch {
-      this.bunSqliteUnavailable = true
-      this.bunSqliteDb?.close?.()
-      this.bunSqliteDb = null
-      this.bunSqliteDbPath = null
-      return null
-    }
-  }
 
   private async sqliteQuery(sql: string): Promise<Record<string, unknown>[]> {
     const backend = await this.getBackendInfo()
     if (backend.type !== 'sqlite') return []
 
-    const bunRows = await this.sqliteQueryViaBun(sql)
-    if (bunRows) return bunRows
 
     try {
       const { stdout } = await execFileAsync('sqlite3', [backend.dbPath, '-json', sql], { maxBuffer: 20 * 1024 * 1024 })
