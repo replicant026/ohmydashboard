@@ -2,7 +2,9 @@
 
 import { parseArgs } from 'util'
 import { join } from 'path'
+import { existsSync } from 'fs'
 import { createApp } from '../server/index'
+import { OpenCodeReader } from '../server/opencode-reader'
 
 const CONTENT_TYPES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -29,8 +31,36 @@ const { values } = parseArgs({
 const port = parseInt(values.port!, 10)
 const host = values.host!
 const distDir = join(import.meta.dir, '..', 'dist')
+const projectRoot = join(import.meta.dir, '..')
+
+const ensureDistExists = () => {
+  const indexPath = join(distDir, 'index.html')
+  if (existsSync(indexPath)) {
+    return
+  }
+
+  console.log('  \x1b[33m⚠️ Dashboard assets not found. Building UI...\x1b[0m')
+  const build = Bun.spawnSync({
+    cmd: ['bun', 'run', 'build:ui'],
+    cwd: projectRoot,
+    stdout: 'inherit',
+    stderr: 'inherit',
+  })
+
+  if (build.exitCode !== 0 || !existsSync(indexPath)) {
+    throw new Error(
+      [
+        'Failed to prepare dashboard assets (dist/index.html not found).',
+        'If you are running from a GitHub fork via bunx, ensure the repository can run `bun run build:ui`.',
+      ].join(' '),
+    )
+  }
+}
+
+ensureDistExists()
 
 const app = createApp()
+const reader = new OpenCodeReader()
 
 const server = Bun.serve({
   hostname: host,
@@ -65,5 +95,16 @@ console.log()
 console.log('  \x1b[36m◉\x1b[0m \x1b[1mOhMyDashboard\x1b[0m')
 console.log()
 console.log(`  \x1b[32m→\x1b[0m http://${server.hostname}:${server.port}`)
-console.log(`  \x1b[90m📂 ~/.local/share/opencode/storage/\x1b[0m`)
-console.log()
+reader.getBackendInfo()
+  .then((backend) => {
+    if (backend.type === 'sqlite') {
+      console.log(`  \x1b[90m🗄️ SQLite: ${backend.dbPath}\x1b[0m`)
+    } else {
+      console.log(`  \x1b[90m📂 ${backend.storageBase}\x1b[0m`)
+    }
+    console.log()
+  })
+  .catch(() => {
+    console.log('  \x1b[90m📂 default OpenCode storage path\x1b[0m')
+    console.log()
+  })
