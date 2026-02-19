@@ -7,6 +7,7 @@ import { TTLCache } from './cache'
 
 const execFileAsync = promisify(execFile)
 
+
 // --- Raw types (what OpenCode stores on disk) ---
 
 interface RawSession {
@@ -411,9 +412,11 @@ export class OpenCodeReader {
     return this.backendPromise
   }
 
+
   private async sqliteQuery(sql: string): Promise<Record<string, unknown>[]> {
     const backend = await this.getBackendInfo()
     if (backend.type !== 'sqlite') return []
+
 
     try {
       const { stdout } = await execFileAsync('sqlite3', [backend.dbPath, '-json', sql], { maxBuffer: 20 * 1024 * 1024 })
