@@ -399,9 +399,7 @@ export class OpenCodeReader {
   private cache = new TTLCache<unknown>(30_000)
   private backendPromise: Promise<StorageBackend>
   private storageBasePromise: Promise<string>
-  private bunSqliteDb: BunSqliteDatabase | null = null
-  private bunSqliteDbPath: string | null = null
-  private bunSqliteUnavailable = false
+
   private sqliteTableNameCache = new Map<string, string | null>()
   private sqliteLoggedError = false
 
@@ -464,7 +462,7 @@ export class OpenCodeReader {
     } catch (error) {
       if (!this.sqliteLoggedError) {
         this.sqliteLoggedError = true
-        console.warn('[OhMyDashboard] SQLite query failed. Ensure sqlite3 CLI is installed or run with Bun for built-in SQLite support.', error)
+
       }
       return []
     }
